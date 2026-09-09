@@ -1,0 +1,951 @@
+<UserControl x:Class="Jarvis.Desktop.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource BackgroundBrush}">
+
+    <UserControl.Resources>
+        <!-- Estilo das abas -->
+        <Style x:Key="TabStyle" TargetType="TabItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="24,12"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Border" Background="Transparent"
+                                BorderThickness="0,0,0,2"
+                                BorderBrush="Transparent"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource HighlightBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource HighlightBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Estilo de seção -->
+        <Style x:Key="SectionLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+
+        <Style x:Key="HintLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#666"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,2,0,16"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource HighlightBrush}"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,20,0,12"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{StaticResource PrimaryBrush}"
+                BorderBrush="{StaticResource AccentBrush}" BorderThickness="0,0,0,1"
+                Padding="40,24">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="⚙" FontSize="20" Foreground="{StaticResource HighlightBrush}" Margin="0,0,12,0"/>
+                <TextBlock Text="CONFIGURAÇÕES" Foreground="{StaticResource HighlightBrush}"
+                           FontSize="18" FontFamily="Consolas" FontWeight="Bold"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Abas -->
+        <TabControl x:Name="MainTabControl" Grid.Row="1" Background="Transparent" BorderThickness="0"
+                    TabStripPlacement="Top"
+                    SelectionChanged="MainTabControl_SelectionChanged">
+            <TabControl.Resources>
+                <Style TargetType="TabPanel">
+                    <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                </Style>
+            </TabControl.Resources>
+
+            <!-- ═══ ABA: GERAL ═══ -->
+            <TabItem Header="👤  Geral" Style="{StaticResource TabStyle}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="40,24">
+                    <StackPanel HorizontalAlignment="Stretch">
+
+                        <TextBlock Text="Seu Nome" Style="{StaticResource SectionLabel}"/>
+                        <TextBox Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource JarvisTextBox}" Margin="0,0,0,2"/>
+                        <TextBlock Text="O JARVIS vai te chamar pelo nome nas respostas."
+                                   Style="{StaticResource HintLabel}"/>
+
+                        <TextBlock Text="System Prompt" Style="{StaticResource SectionLabel}"/>
+                        <TextBox Text="{Binding SystemPrompt}"
+                                 Style="{StaticResource JarvisTextBox}"
+                                 TextWrapping="Wrap" AcceptsReturn="True"
+                                 Height="120" Margin="0,0,0,2"/>
+                        <TextBlock Text="Personalidade e instruções do JARVIS."
+                                   Style="{StaticResource HintLabel}"/>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ═══ ABA: IA ═══ -->
+            <TabItem Header="🤖  IA" Style="{StaticResource TabStyle}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="40,24">
+                    <StackPanel HorizontalAlignment="Stretch">
+
+                        <!-- Provider principal -->
+                        <TextBlock Text="Provedor de IA" Style="{StaticResource SectionLabel}"/>
+                        <ComboBox Background="{StaticResource SurfaceBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  ItemsSource="{Binding AIProviders}"
+                                  SelectedItem="{Binding AiProvider}"
+                                  Margin="0,0,0,2"/>
+                        <TextBlock Text="Escolha qual IA vai responder suas perguntas."
+                                   Style="{StaticResource HintLabel}"/>
+
+                        <!-- Ollama -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding AiProvider}" Value="Ollama">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <TextBlock Text="── OLLAMA (Grátis, roda local) ──" Style="{StaticResource SectionTitle}"/>
+
+                            <TextBlock Text="Servidor" Style="{StaticResource SectionLabel}"/>
+                            <TextBox Text="{Binding OllamaBaseUrl}" Style="{StaticResource JarvisTextBox}" Margin="0,0,0,12"/>
+
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Modelo de Texto" Style="{StaticResource SectionLabel}" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Content="↻ Atualizar lista"
+                                        Command="{Binding LoadOllamaModelsCommand}"
+                                        FontFamily="Consolas" FontSize="10" Padding="8,3" Cursor="Hand"
+                                        Background="#1C2B4A" Foreground="{StaticResource HighlightBrush}"
+                                        BorderThickness="1" BorderBrush="{StaticResource AccentBrush}"/>
+                            </Grid>
+                            <TextBox Text="{Binding OllamaModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource JarvisTextBox}" Margin="0,0,0,4"/>
+                            <ItemsControl ItemsSource="{Binding OllamaModels}" Margin="0,0,0,12">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{Binding}" FontFamily="Consolas" FontSize="11"
+                                                Margin="0,2,4,2" Padding="6,2" Cursor="Hand"
+                                                Background="#1C2B4A" Foreground="{StaticResource TextPrimaryBrush}"
+                                                BorderThickness="1" BorderBrush="{StaticResource AccentBrush}"
+                                                Command="{Binding DataContext.SelectOllamaModelCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Text="Modelo de Visão (para imagens)" Style="{StaticResource SectionLabel}"/>
+                            <TextBox Text="{Binding OllamaVisionModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource JarvisTextBox}" Margin="0,0,0,4"/>
+                            <ItemsControl ItemsSource="{Binding OllamaModels}" Margin="0,0,0,2">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{Binding}" FontFamily="Consolas" FontSize="11"
+                                                Margin="0,2,4,2" Padding="6,2" Cursor="Hand"
+                                                Background="#1C2B4A" Foreground="{StaticResource TextPrimaryBrush}"
+                                                BorderThickness="1" BorderBrush="{StaticResource AccentBrush}"
+                                                Command="{Binding DataContext.SelectOllamaVisionModelCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="Usado automaticamente quando você envia uma imagem."
+                                       Style="{StaticResource HintLabel}"/>
+
+                            <TextBlock Text="Modelo de PDF (para documentos)" Style="{StaticResource SectionLabel}" Margin="0,8,0,0"/>
+                            <TextBox Text="{Binding OllamaPdfModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource JarvisTextBox}" Margin="0,0,0,4"/>
+                            <ItemsControl ItemsSource="{Binding OllamaModels}" Margin="0,0,0,2">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{Binding}" FontFamily="Consolas" FontSize="11"
+                                                Margin="0,2,4,2" Padding="6,2" Cursor="Hand"
+                                                Background="#1C2B4A" Foreground="{StaticResource TextPrimaryBrush}"
+                                                BorderThickness="1" BorderBrush="{StaticResource AccentBrush}"
+                                                Command="{Binding DataContext.SelectOllamaPdfModelCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="Deixe vazio para usar o mesmo modelo de texto. Recomendado: gemma4:latest para PDFs longos."
+                                       Style="{StaticResource HintLabel}"/>
+                        </StackPanel>
+
+                        <!-- OpenAI -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding AiProvider}" Value="OpenAI">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="── OPENAI ──" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock Text="API Key" Style="{StaticResource SectionLabel}"/>
+                            <PasswordBox x:Name="OpenAIKeyBox" Background="{StaticResource SurfaceBrush}"
+                                         Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,12"/>
+                            <TextBlock Text="Modelo" Style="{StaticResource SectionLabel}"/>
+                            <TextBox Text="{Binding OpenAIModel}" Style="{StaticResource JarvisTextBox}" Margin="0,0,0,2"/>
+                            <TextBlock Text="Ex: gpt-4o, gpt-4o-mini" Style="{StaticResource HintLabel}"/>
+                        </StackPanel>
+
+                        <!-- Claude -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding AiProvider}" Value="Claude">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="── CLAUDE (Anthropic) ──" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock Text="API Key" Style="{StaticResource SectionLabel}"/>
+                            <PasswordBox x:Name="ClaudeKeyBox" Background="{StaticResource SurfaceBrush}"
+                                         Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,12"/>
+                            <TextBlock Text="Modelo" Style="{StaticResource SectionLabel}"/>
+                            <TextBox Text="{Binding ClaudeModel}" Style="{StaticResource JarvisTextBox}" Margin="0,0,0,2"/>
+                            <TextBlock Text="Ex: claude-sonnet-4-6, claude-opus-4-6" Style="{StaticResource HintLabel}"/>
+                        </StackPanel>
+
+                        <!-- Gemini -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding AiProvider}" Value="Gemini">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="── GEMINI (Google) ──" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock Text="Modelo" Style="{StaticResource SectionLabel}"/>
+                            <ComboBox Background="{StaticResource SurfaceBrush}"
+                                      Foreground="{StaticResource TextPrimaryBrush}"
+                                      ItemsSource="{Binding GeminiVisionModels}"
+                                      SelectedItem="{Binding GeminiVisionModel}"
+                                      Margin="0,0,0,2"/>
+                            <TextBlock Text="✔ Gratuito — 1500 req/dia. Chave em aistudio.google.com"
+                                       Foreground="#00FF88" FontFamily="Consolas" FontSize="10" Margin="0,0,0,12"/>
+                        </StackPanel>
+
+                        <!-- Vision Provider -->
+                        <TextBlock Text="── ANÁLISE DE IMAGEM ──" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="Provedor de Visão" Style="{StaticResource SectionLabel}"/>
+                        <ComboBox Background="{StaticResource SurfaceBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  ItemsSource="{Binding VisionProviders}"
+                                  SelectedItem="{Binding VisionProvider}"
+                                  Margin="0,0,0,2"/>
+                        <TextBlock Text="Qual IA analisa imagens que você envia no chat."
+                                   Style="{StaticResource HintLabel}"/>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ═══ ABA: VOZ ═══ -->
+            <TabItem Header="🎤  Voz" Style="{StaticResource TabStyle}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="40,24">
+                    <StackPanel HorizontalAlignment="Stretch">
+
+                        <CheckBox Content="Responder em áudio por padrão"
+                                  IsChecked="{Binding EnableVoiceByDefault}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  FontFamily="Consolas" FontSize="13" Margin="0,0,0,4"/>
+                        <TextBlock Text="Equivale ao botão 🔊 no chat."
+                                   Style="{StaticResource HintLabel}"/>
+
+                        <TextBlock Text="── MICROFONE (fala → texto) ──" Style="{StaticResource SectionTitle}"/>
+
+                        <TextBlock Text="Provedor STT" Style="{StaticResource SectionLabel}"/>
+                        <ComboBox Background="{StaticResource SurfaceBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  ItemsSource="{Binding STTProviders}"
+                                  SelectedItem="{Binding SttProvider}"
+                                  Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Microfone" Style="{StaticResource SectionLabel}"/>
+                        <ComboBox Background="{StaticResource SurfaceBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  ItemsSource="{Binding Microphones}"
+                                  SelectedItem="{Binding SelectedMicrophone}"
+                                  Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Modelo Whisper" Style="{StaticResource SectionLabel}"/>
+                        <ComboBox Background="{StaticResource SurfaceBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  ItemsSource="{Binding WhisperModels}"
+                                  SelectedItem="{Binding WhisperModel}"
+                                  Margin="0,0,0,2"/>
+                        <TextBlock Text="Apenas se STT = Whisper. Trocar modelo apaga o anterior."
+                                   Style="{StaticResource HintLabel}"/>
+
+                        <TextBlock Text="── FALA (texto → áudio) ──" Style="{StaticResource SectionTitle}"/>
+
+                        <TextBlock Text="Provedor TTS" Style="{StaticResource SectionLabel}"/>
+                        <ComboBox Background="{StaticResource SurfaceBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  ItemsSource="{Binding TTSProviders}"
+                                  SelectedItem="{Binding TtsProvider}"
+                                  Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Voz do Windows" Style="{StaticResource SectionLabel}"/>
+                        <ComboBox Background="{StaticResource SurfaceBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  ItemsSource="{Binding WindowsVoices}"
+                                  SelectedItem="{Binding SelectedVoiceName}"
+                                  Margin="0,0,0,2"/>
+                        <TextBlock Text="Apenas se TTS = Windows." Style="{StaticResource HintLabel}"/>
+
+                        <TextBlock Text="Idioma" Style="{StaticResource SectionLabel}"/>
+                        <ComboBox Background="{StaticResource SurfaceBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  ItemsSource="{Binding Languages}"
+                                  SelectedItem="{Binding SelectedLanguage}"
+                                  Margin="0,0,0,12"/>
+
+                        <TextBlock Text="Dispositivo de saída de áudio" Style="{StaticResource SectionLabel}"/>
+                        <ComboBox Background="{StaticResource SurfaceBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  ItemsSource="{Binding AudioOutputDevices}"
+                                  SelectedItem="{Binding SelectedAudioOutputDevice}"
+                                  Margin="0,0,0,2"/>
+                        <TextBlock Text="Qual caixa de som ou fone reproduz a voz da IA."
+                                   Style="{StaticResource HintLabel}"/>
+
+                        <!-- Piper — só aparece se TTS = Piper -->
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding TtsProvider}" Value="Piper">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="── PIPER (voz offline PT-BR) ──" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock Text="Caminho do piper.exe" Style="{StaticResource SectionLabel}"/>
+                            <TextBox Text="{Binding PiperExePath}" Style="{StaticResource JarvisTextBox}" Margin="0,0,0,12"/>
+                            <TextBlock Text="Caminho do modelo (.onnx)" Style="{StaticResource SectionLabel}"/>
+                            <TextBox Text="{Binding PiperModelPath}" Style="{StaticResource JarvisTextBox}" Margin="0,0,0,2"/>
+                            <TextBlock Text="Ex: piper\pt_BR-faber-medium.onnx" Style="{StaticResource HintLabel}"/>
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ═══ ABA: BUSCA ═══ -->
+            <TabItem Header="🔍  Busca" Style="{StaticResource TabStyle}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="40,24">
+                    <StackPanel HorizontalAlignment="Stretch">
+
+                        <TextBlock Text="Buscador padrão" Style="{StaticResource SectionLabel}"/>
+                        <ComboBox Background="{StaticResource SurfaceBrush}"
+                                  Foreground="{StaticResource TextPrimaryBrush}"
+                                  ItemsSource="{Binding SearchProviders}"
+                                  SelectedItem="{Binding SearchProvider}"
+                                  Margin="0,0,0,2"/>
+                        <TextBlock Text="DuckDuckGo: gratuito, sem chave. Google/Brave: requer chave abaixo."
+                                   Style="{StaticResource HintLabel}"/>
+
+                        <TextBlock Text="── GOOGLE CUSTOM SEARCH ──" Style="{StaticResource SectionTitle}"/>
+
+                        <TextBlock Text="API Key" Style="{StaticResource SectionLabel}"/>
+                        <TextBox Text="{Binding GoogleApiKey, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource JarvisTextBox}" Margin="0,0,0,2"/>
+                        <TextBlock Text="Obtenha em: console.developers.google.com → Custom Search JSON API (100 buscas/dia grátis)"
+                                   Style="{StaticResource HintLabel}"/>
+
+                        <TextBlock Text="Search Engine ID (CX)" Style="{StaticResource SectionLabel}"/>
+                        <TextBox Text="{Binding GoogleSearchEngineId, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource JarvisTextBox}" Margin="0,0,0,2"/>
+                        <TextBlock Text="Crie em: programmablesearchengine.google.com → copie o ID gerado"
+                                   Style="{StaticResource HintLabel}"/>
+
+                        <TextBlock Text="── BRAVE SEARCH (alternativa) ──" Style="{StaticResource SectionTitle}"/>
+
+                        <TextBlock Text="API Key" Style="{StaticResource SectionLabel}"/>
+                        <TextBox Text="{Binding BraveApiKey, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource JarvisTextBox}" Margin="0,0,0,2"/>
+                        <TextBlock Text="Obtenha em: api.search.brave.com → Free plan: 2000 buscas/mês"
+                                   Style="{StaticResource HintLabel}"/>
+
+                        <TextBlock Text="── PRIORIDADE DE BUSCA ──" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8">
+                            <Run Text="1."/>
+                            <Run Text=" Google" Foreground="{StaticResource HighlightBrush}"/>
+                            <Run Text=" — se API Key + CX configurados"/>
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8">
+                            <Run Text="2."/>
+                            <Run Text=" Brave" Foreground="{StaticResource HighlightBrush}"/>
+                            <Run Text=" — se API Key configurada"/>
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8">
+                            <Run Text="3."/>
+                            <Run Text=" DuckDuckGo" Foreground="{StaticResource HighlightBrush}"/>
+                            <Run Text=" — gratuito, sem chave, sempre disponível"/>
+                        </TextBlock>
+                        <TextBlock Text="Após salvar, reinicie o JARVIS para aplicar as novas chaves."
+                                   Foreground="#FFB347" FontFamily="Consolas" FontSize="11"
+                                   TextWrapping="Wrap" Margin="0,12,0,0"/>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ═══ ABA: APARÊNCIA ═══ -->
+            <TabItem Header="🎨  Aparência" Style="{StaticResource TabStyle}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="40,24">
+                    <StackPanel MaxWidth="600" HorizontalAlignment="Left">
+
+                        <TextBlock Text="IMAGEM DE FUNDO DO CHAT" Style="{StaticResource SectionTitle}"/>
+
+                        <Border Background="#111827" BorderBrush="{StaticResource AccentBrush}"
+                                BorderThickness="1" CornerRadius="6" Padding="16,14" Margin="0,0,0,20">
+                            <StackPanel>
+                                <!-- Caminho da imagem -->
+                                <TextBlock Text="Arquivo de imagem" Style="{StaticResource SectionLabel}"/>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0"
+                                             Text="{Binding ChatBackgroundImagePath, UpdateSourceTrigger=PropertyChanged}"
+                                             Style="{StaticResource JarvisTextBox}"
+                                             FontFamily="Consolas" FontSize="11"
+                                             IsReadOnly="True"
+                                             Margin="0,0,6,0"/>
+                                    <Button Grid.Column="1"
+                                            Content="📁 Escolher"
+                                            Style="{StaticResource JarvisButton}"
+                                            Command="{Binding SelectBackgroundImageCommand}"
+                                            Padding="10,6" Margin="0,0,6,0"/>
+                                    <Button Grid.Column="2"
+                                            Content="✕ Limpar"
+                                            Style="{StaticResource JarvisButton}"
+                                            Command="{Binding ClearBackgroundImageCommand}"
+                                            Padding="10,6"/>
+                                </Grid>
+
+                                <!-- Opacidade -->
+                                <TextBlock Text="Opacidade da imagem" Style="{StaticResource SectionLabel}"/>
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="50"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Slider Grid.Column="0"
+                                            Minimum="0.05" Maximum="1.0"
+                                            Value="{Binding ChatBackgroundOpacity}"
+                                            TickFrequency="0.05"
+                                            IsSnapToTickEnabled="True"
+                                            VerticalAlignment="Center"
+                                            Margin="0,0,10,0"
+                                            Foreground="{StaticResource HighlightBrush}"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding ChatBackgroundOpacity, StringFormat={}{0:P0}}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               FontFamily="Consolas" FontSize="11"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <TextBlock Text="💡 A imagem aparece como fundo da área de chat. Salve e a mudança é imediata."
+                                           Foreground="#6272A4" FontFamily="Consolas" FontSize="10"
+                                           TextWrapping="Wrap" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ═══ ABA: AJUDA ═══ -->
+            <TabItem Header="❓  Ajuda" Style="{StaticResource TabStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Sub-abas internas -->
+                    <TabControl Grid.Row="0" Grid.RowSpan="2" Background="Transparent" BorderThickness="0"
+                                TabStripPlacement="Left">
+                        <TabControl.Resources>
+                            <Style TargetType="TabPanel">
+                                <Setter Property="Background" Value="#0D1020"/>
+                            </Style>
+                        </TabControl.Resources>
+
+                        <!-- Sub-aba: Busca -->
+                        <TabItem Style="{StaticResource TabStyle}" Padding="16,10">
+                            <TabItem.Header>
+                                <TextBlock Text="🔍  Google Search" FontFamily="Consolas" FontSize="12"/>
+                            </TabItem.Header>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,20">
+                                <StackPanel HorizontalAlignment="Stretch">
+                                    <TextBlock Text="── COMO CONFIGURAR O GOOGLE SEARCH ──" Style="{StaticResource SectionTitle}"/>
+
+                        <TextBlock Style="{StaticResource SectionLabel}" Text="O que você vai precisar:"/>
+                        <TextBlock Style="{StaticResource HintLabel}"
+                                   Text="Uma conta Google gratuita. Limite: 100 buscas/dia sem custo."/>
+
+                        <Border Background="#0D1F0D" BorderBrush="#00FF88" BorderThickness="1"
+                                CornerRadius="6" Padding="16,12" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="PASSO 1 — Criar a API Key" Foreground="#00FF88"
+                                           FontFamily="Consolas" FontSize="12" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"
+                                           Foreground="{StaticResource TextPrimaryBrush}" LineHeight="18">
+                                    <Run Text="1."/>
+                                    <Run Text=" Acesse:" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text=" console.cloud.google.com" Foreground="#00FF88"/>
+                                    <LineBreak/>
+                                    <Run Text="2."/>
+                                    <Run Text=" Clique em" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text=" &quot;Selecione um projeto&quot;" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <Run Text=" → " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="&quot;Novo projeto&quot;" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="3."/>
+                                    <Run Text=" No menu: " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="APIs e Serviços → Biblioteca" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="4."/>
+                                    <Run Text=" Pesquise " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="&quot;Custom Search JSON API&quot;" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <Run Text=" → clique em " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="Ativar" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="5."/>
+                                    <Run Text=" Vá em " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="APIs e Serviços → Credenciais" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="6."/>
+                                    <Run Text=" Clique em " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="Criar credenciais → Chave de API" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="7."/>
+                                    <Run Text=" Copie a chave e cole no campo " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="API Key" Foreground="#00FF88"/>
+                                    <Run Text=" da aba 🔍 Busca" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#0D1F0D" BorderBrush="#00FF88" BorderThickness="1"
+                                CornerRadius="6" Padding="16,12" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="PASSO 2 — Criar o Search Engine ID (CX)" Foreground="#00FF88"
+                                           FontFamily="Consolas" FontSize="12" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"
+                                           Foreground="{StaticResource TextPrimaryBrush}" LineHeight="18">
+                                    <Run Text="1."/>
+                                    <Run Text=" Acesse:" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text=" programmablesearchengine.google.com" Foreground="#00FF88"/>
+                                    <LineBreak/>
+                                    <Run Text="2."/>
+                                    <Run Text=" Clique em " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="&quot;Adicionar&quot;" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="3."/>
+                                    <Run Text=" Em Sites a pesquisar coloque " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="*.com" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="4."/>
+                                    <Run Text=" Marque " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="&quot;Pesquisar na Web inteira&quot;" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="5."/>
+                                    <Run Text=" Clique em " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="Criar" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="6."/>
+                                    <Run Text=" Clique em " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="Personalizar" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <Run Text=" e copie o " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="ID do mecanismo de pesquisa" Foreground="#00FF88"/>
+                                    <LineBreak/>
+                                    <Run Text="7."/>
+                                    <Run Text=" Cole no campo " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="Search Engine ID (CX)" Foreground="#00FF88"/>
+                                    <Run Text=" da aba 🔍 Busca" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#0D1F0D" BorderBrush="#00FF88" BorderThickness="1"
+                                CornerRadius="6" Padding="16,12" Margin="0,0,0,24">
+                            <StackPanel>
+                                <TextBlock Text="PASSO 3 — Ativar no Jarvis" Foreground="#00FF88"
+                                           FontFamily="Consolas" FontSize="12" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"
+                                           Foreground="{StaticResource TextPrimaryBrush}" LineHeight="18">
+                                    <Run Text="1."/>
+                                    <Run Text=" Vá na aba " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="🔍 Busca" Foreground="#00FF88"/>
+                                    <LineBreak/>
+                                    <Run Text="2."/>
+                                    <Run Text=" Selecione " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="Google" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <Run Text=" no campo Buscador padrão" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="3."/>
+                                    <Run Text=" Cole a API Key e o Search Engine ID" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="4."/>
+                                    <Run Text=" Clique em " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="💾 Salvar" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                    <Run Text=" e reinicie o Jarvis" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- DuckDuckGo -->
+                        <TextBlock Text="── DUCKDUCKGO (PADRÃO, SEM CONFIGURAÇÃO) ──" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"
+                                   Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8" LineHeight="18">
+                            <Run Text="Funciona automaticamente sem nenhuma chave."/>
+                            <LineBreak/>
+                            <Run Text="Desvantagem: depende de scraping HTML — pode parar de funcionar"/>
+                            <LineBreak/>
+                            <Run Text="se o DuckDuckGo mudar a estrutura da página."/>
+                        </TextBlock>
+                        <TextBlock Text="Como saber se quebrou: o Jarvis responde perguntas de notícias sem dados atuais."
+                                   FontFamily="Consolas" FontSize="11" Foreground="#FFB347"
+                                   TextWrapping="Wrap" Margin="0,0,0,24"/>
+
+                                    <!-- Limites -->
+                                    <TextBlock Text="── LIMITES GRATUITOS ──" Style="{StaticResource SectionTitle}"/>
+                                    <Border Background="#1A1A2E" BorderBrush="{StaticResource AccentBrush}"
+                                            BorderThickness="1" CornerRadius="6" Padding="16,12">
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="DuckDuckGo" Foreground="#00FF88" FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                                <TextBlock Grid.Column="1" Text="Ilimitado (scraping)" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" FontSize="11"/>
+                                            </Grid>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="Google" Foreground="#00FF88" FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                                <TextBlock Grid.Column="1" Text="100 buscas/dia grátis" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" FontSize="11"/>
+                                            </Grid>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="140"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="Brave" Foreground="#00FF88" FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                                <TextBlock Grid.Column="1" Text="$5 créditos/mês (≈ 1000 buscas) — exige cartão" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" FontSize="11"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <!-- Sub-aba: Ollama -->
+                        <TabItem Style="{StaticResource TabStyle}" Padding="16,10">
+                            <TabItem.Header>
+                                <TextBlock Text="🤖  Ollama" FontFamily="Consolas" FontSize="12"/>
+                            </TabItem.Header>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,20">
+                                <StackPanel HorizontalAlignment="Stretch">
+                                    <TextBlock Text="── COMO CONFIGURAR O OLLAMA (IA LOCAL GRÁTIS) ──" Style="{StaticResource SectionTitle}"/>
+                        <Border Background="#0D1020" BorderBrush="{StaticResource AccentBrush}"
+                                BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,16">
+                            <TextBlock TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"
+                                       Foreground="{StaticResource TextPrimaryBrush}" LineHeight="20">
+                                <Run Text="1." FontWeight="Bold"/>
+                                <Run Text=" Baixe o Ollama em:" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <Run Text=" ollama.com/download" Foreground="{StaticResource HighlightBrush}"/>
+                                <LineBreak/>
+                                <Run Text="2." FontWeight="Bold"/>
+                                <Run Text=" Instale e abra o Ollama — ele ficará na bandeja do sistema" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <LineBreak/>
+                                <Run Text="3." FontWeight="Bold"/>
+                                <Run Text=" Abra o terminal (CMD ou PowerShell) e baixe um modelo:" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <LineBreak/>
+                                <Run Text="   ollama pull llama3.2" Foreground="{StaticResource HighlightBrush}"/>
+                                <Run Text="  (recomendado, 2GB)" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <LineBreak/>
+                                <Run Text="   ollama pull gemma3" Foreground="{StaticResource HighlightBrush}"/>
+                                <Run Text="  (boa alternativa)" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <LineBreak/>
+                                <Run Text="4." FontWeight="Bold"/>
+                                <Run Text=" No Jarvis: aba " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <Run Text="🤖 IA" Foreground="{StaticResource HighlightBrush}"/>
+                                <Run Text=" → Provedor:" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <Run Text=" Ollama" Foreground="{StaticResource HighlightBrush}"/>
+                                <Run Text=" → clique " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <Run Text="↻ Atualizar lista" Foreground="{StaticResource HighlightBrush}"/>
+                                <LineBreak/>
+                                <Run Text="5." FontWeight="Bold"/>
+                                <Run Text=" Selecione o modelo baixado → 💾 Salvar" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            </TextBlock>
+                        </Border>
+                                    <TextBlock Text="⚠ O Ollama precisa estar rodando para o Jarvis funcionar (ícone na bandeja)."
+                                               Foreground="#FFB347" FontFamily="Consolas" FontSize="11"
+                                               TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <!-- Sub-aba: Voz -->
+                        <TabItem Style="{StaticResource TabStyle}" Padding="16,10">
+                            <TabItem.Header>
+                                <TextBlock Text="🎤  Voz" FontFamily="Consolas" FontSize="12"/>
+                            </TabItem.Header>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,20">
+                                <StackPanel HorizontalAlignment="Stretch">
+                                    <TextBlock Text="── COMO CONFIGURAR A VOZ ──" Style="{StaticResource SectionTitle}"/>
+                        <Border Background="#0D1020" BorderBrush="{StaticResource AccentBrush}"
+                                BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,8">
+                            <StackPanel>
+                                <TextBlock Text="STT — Fala para Texto (microfone)" Foreground="{StaticResource HighlightBrush}"
+                                           FontFamily="Consolas" FontSize="11" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"
+                                           Foreground="{StaticResource TextPrimaryBrush}" LineHeight="20">
+                                    <Run Text="• Windows:" FontWeight="Bold"/>
+                                    <Run Text=" funciona direto, sem configuração" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="• Whisper:" FontWeight="Bold"/>
+                                    <Run Text=" mais preciso. Selecione o tamanho do modelo (Tiny = rápido, Large = preciso)" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                </TextBlock>
+                                <TextBlock Text="TTS — Texto para Fala (resposta em áudio)" Foreground="{StaticResource HighlightBrush}"
+                                           FontFamily="Consolas" FontSize="11" FontWeight="Bold" Margin="0,12,0,8"/>
+                                <TextBlock TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"
+                                           Foreground="{StaticResource TextPrimaryBrush}" LineHeight="20">
+                                    <Run Text="• Windows:" FontWeight="Bold"/>
+                                    <Run Text=" usa vozes instaladas no sistema. Painel de Controle → Fala → Vozes" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="• Piper:" FontWeight="Bold"/>
+                                    <Run Text=" voz offline em PT-BR de alta qualidade. Baixe em:" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text=" github.com/rhasspy/piper" Foreground="{StaticResource HighlightBrush}"/>
+                                    <LineBreak/>
+                                    <Run Text="• Ative/desative a voz no chat com o botão " Foreground="{StaticResource TextSecondaryBrush}"/>
+                                    <Run Text="🔊 / 🔇" Foreground="{StaticResource HighlightBrush}"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                                    <TextBlock Text="Para ativar voz por padrão ao abrir o Jarvis: marque a opção na aba 🎤 Voz."
+                                               FontFamily="Consolas" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                                               TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <!-- Sub-aba: Arquivos -->
+                        <TabItem Style="{StaticResource TabStyle}" Padding="16,10">
+                            <TabItem.Header>
+                                <TextBlock Text="📎  Arquivos" FontFamily="Consolas" FontSize="12"/>
+                            </TabItem.Header>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,20">
+                                <StackPanel HorizontalAlignment="Stretch">
+                                    <TextBlock Text="── COMO USAR IMAGENS E PDF ──" Style="{StaticResource SectionTitle}"/>
+                        <Border Background="#0D1020" BorderBrush="{StaticResource AccentBrush}"
+                                BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,8">
+                            <TextBlock TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"
+                                       Foreground="{StaticResource TextPrimaryBrush}" LineHeight="20">
+                                <Run Text="📎 Imagem:" FontWeight="Bold"/>
+                                <Run Text=" clique no botão 📎 no chat → selecione PNG/JPG/WEBP" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <LineBreak/>
+                                <Run Text="📄 PDF:" FontWeight="Bold"/>
+                                <Run Text=" clique no botão 📄 → selecione o arquivo PDF" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <LineBreak/>
+                                <LineBreak/>
+                                <Run Text="⚠ Requer um provedor com suporte a visão:" FontWeight="Bold" Foreground="#FFB347"/>
+                                <LineBreak/>
+                                <Run Text="• Gemini, Claude ou OpenAI (com visão configurada na aba 🤖 IA)" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <LineBreak/>
+                                <Run Text="• Ollama: configure um modelo de visão (ex: llava, minicpm-v)" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            </TextBlock>
+                        </Border>
+                                    <TextBlock Text="Para mudar qual IA analisa imagens: aba 🤖 IA → seção Análise de Imagem → Provedor de Visão."
+                                               FontFamily="Consolas" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                                               TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <!-- Sub-aba: Atalhos -->
+                        <TabItem Style="{StaticResource TabStyle}" Padding="16,10">
+                            <TabItem.Header>
+                                <TextBlock Text="⌨  Atalhos" FontFamily="Consolas" FontSize="12"/>
+                            </TabItem.Header>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,20">
+                                <StackPanel HorizontalAlignment="Stretch">
+                                    <TextBlock Text="── ATALHOS E BOTÕES DO CHAT ──" Style="{StaticResource SectionTitle}"/>
+                        <Border Background="#1A1A2E" BorderBrush="{StaticResource AccentBrush}"
+                                BorderThickness="1" CornerRadius="6" Padding="16,12" Margin="0,0,0,32">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Enter" Foreground="{StaticResource HighlightBrush}" FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="1" Text="Enviar mensagem" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" FontSize="11"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="🔍 Botão" Foreground="{StaticResource HighlightBrush}" FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="1" Text="Forçar busca na internet e responder" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" FontSize="11"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="⏹ Cancelar" Foreground="{StaticResource HighlightBrush}" FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="1" Text="Abortar resposta em andamento" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" FontSize="11"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="🎤 Botão" Foreground="{StaticResource HighlightBrush}" FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="1" Text="Falar (clique de novo para parar)" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" FontSize="11"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="🔊 / 🔇 Botão" Foreground="{StaticResource HighlightBrush}" FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="1" Text="Ativar/desativar resposta em áudio" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" FontSize="11"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="🗑 Botão" Foreground="{StaticResource HighlightBrush}" FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="1" Text="Limpar conversa (apaga histórico)" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" FontSize="11"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Ctrl+C" Foreground="{StaticResource HighlightBrush}" FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="1" Text="Copiar texto selecionado da resposta" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" FontSize="11"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="📋 Copiar" Foreground="{StaticResource HighlightBrush}" FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="1" Text="Copia a resposta completa do assistente" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" FontSize="11"/>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="Ctrl+Shift+J" Foreground="{StaticResource HighlightBrush}" FontFamily="Consolas" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock Grid.Column="1" Text="Hotkey global — abre o Jarvis de qualquer lugar" Foreground="{StaticResource TextSecondaryBrush}" FontFamily="Consolas" FontSize="11"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <!-- Sub-aba: Problemas -->
+                        <TabItem Style="{StaticResource TabStyle}" Padding="16,10">
+                            <TabItem.Header>
+                                <TextBlock Text="❌  Problemas" FontFamily="Consolas" FontSize="12"/>
+                            </TabItem.Header>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,20">
+                                <StackPanel HorizontalAlignment="Stretch">
+                                    <!-- ═══ PROBLEMAS COMUNS ═══ -->
+                                    <TextBlock Text="── PROBLEMAS COMUNS ──" Style="{StaticResource SectionTitle}"/>
+                                    <Border Background="#1A1A2E" BorderBrush="{StaticResource AccentBrush}"
+                                            BorderThickness="1" CornerRadius="6" Padding="16,12">
+                                        <TextBlock TextWrapping="Wrap" FontFamily="Consolas" FontSize="11"
+                                                   Foreground="{StaticResource TextPrimaryBrush}" LineHeight="22">
+                                            <Run Text="❌ IA não responde" FontWeight="Bold" Foreground="#E94560"/>
+                                            <LineBreak/>
+                                            <Run Text="   → Ollama não está rodando. Abra o Ollama pelo menu iniciar." Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            <LineBreak/><LineBreak/>
+                                            <Run Text="❌ Busca não traz resultados atuais" FontWeight="Bold" Foreground="#E94560"/>
+                                            <LineBreak/>
+                                            <Run Text="   → DuckDuckGo mudou o HTML. Configure Google ou Brave na aba 🔍 Busca." Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            <LineBreak/><LineBreak/>
+                                            <Run Text="❌ Chaves de API não funcionam após salvar" FontWeight="Bold" Foreground="#E94560"/>
+                                            <LineBreak/>
+                                            <Run Text="   → Reinicie o Jarvis após salvar novas chaves." Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            <LineBreak/><LineBreak/>
+                                            <Run Text="❌ Voz não funciona" FontWeight="Bold" Foreground="#E94560"/>
+                                            <LineBreak/>
+                                            <Run Text="   → Verifique se há vozes instaladas: Painel de Controle → Fala." Foreground="{StaticResource TextSecondaryBrush}"/>
+                                            <LineBreak/><LineBreak/>
+                                            <Run Text="❌ Imagem não é analisada" FontWeight="Bold" Foreground="#E94560"/>
+                                            <LineBreak/>
+                                            <Run Text="   → Configure um provedor de visão na aba 🤖 IA → Análise de Imagem." Foreground="{StaticResource TextSecondaryBrush}"/>
+                                        </TextBlock>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+
+                    </TabControl>
+                </Grid>
+            </TabItem>
+
+        </TabControl>
+
+        <!-- Footer com botão Salvar -->
+        <Border Grid.Row="2" Background="{StaticResource PrimaryBrush}"
+                BorderBrush="{StaticResource AccentBrush}" BorderThickness="0,1,0,0"
+                Padding="24,12">
+            <Grid>
+                <Button Content="💾  Salvar" Style="{StaticResource JarvisButton}"
+                        Command="{Binding SaveSettingsCommand}"
+                        HorizontalAlignment="Left" Padding="24,12" FontSize="14"/>
+                <TextBlock Text="{Binding SaveStatus}" Foreground="#00FF88"
+                           FontFamily="Consolas" FontSize="13"
+                           VerticalAlignment="Center" HorizontalAlignment="Right"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

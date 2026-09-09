@@ -1,0 +1,32 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build
+bin/
+obj/
+out/
+
+# NuGet
+*.nupkg
+packages/
+.nuget/
+
+# Logs
+*.log
+logs/
+
+# User settings (API keys)
+appsettings.user.json
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Whisper models (grandes demais para o git)
+*.bin
+*.gguf
+*.onnx

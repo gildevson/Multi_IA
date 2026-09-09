@@ -1,0 +1,302 @@
+<Window x:Class="Jarvis.Desktop.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:Jarvis.Desktop.Converters"
+        mc:Ignorable="d"
+        Title="J.A.R.V.I.S."
+        Height="800" Width="1200"
+        MinHeight="600" MinWidth="900"
+        Background="{StaticResource BackgroundBrush}"
+        WindowStyle="SingleBorderWindow"
+        KeyDown="Window_KeyDown">
+
+    <Window.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:GuidEqualsConverter x:Key="GuidEquals"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ══ SIDEBAR ══════════════════════════════════════════════════════ -->
+        <Border Grid.Column="0"
+                Background="{StaticResource PrimaryBrush}"
+                BorderBrush="{StaticResource AccentBrush}"
+                BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>  <!-- logo/título -->
+                    <RowDefinition Height="Auto"/>  <!-- nova conversa -->
+                    <RowDefinition Height="*"/>     <!-- sessões (scroll) -->
+                    <RowDefinition Height="Auto"/>  <!-- nav inferior -->
+                </Grid.RowDefinitions>
+
+                <!-- Logo -->
+                <Border Grid.Row="0" Padding="14,16,14,10">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⬡" Foreground="{StaticResource HighlightBrush}"
+                                       FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="J.A.R.V.I.S." Foreground="{StaticResource HighlightBrush}"
+                                       FontSize="15" FontWeight="Bold" FontFamily="Consolas"
+                                       VerticalAlignment="Center"/>
+                            <Ellipse Width="6" Height="6" Fill="#00FF88" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <!-- Botão tela cheia -->
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Click="ToggleFullscreen_Click"
+                                ToolTip="Tela cheia (F11)"
+                                Background="Transparent" BorderThickness="0"
+                                Cursor="Hand" Padding="4">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#1C2B4A"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                            <TextBlock x:Name="FullscreenIcon" Text="⛶"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       FontSize="14"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Nova Conversa -->
+                <Button Grid.Row="1"
+                        Style="{StaticResource SidebarItemButton}"
+                        Command="{Binding NavigateToChatCommand}"
+                        Margin="8,0,8,4">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="✏" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Nova Conversa" FontFamily="Consolas" FontSize="12" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Sessões agrupadas -->
+                <ScrollViewer Grid.Row="2"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Hidden"
+                              Margin="0,4,0,4">
+                    <ItemsControl ItemsSource="{Binding GroupedSessions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,6,0,0">
+                                    <!-- Cabeçalho do grupo -->
+                                    <TextBlock Text="{Binding Label}"
+                                               Foreground="{StaticResource TextSecondaryBrush}"
+                                               FontFamily="Consolas" FontSize="10"
+                                               FontWeight="Bold"
+                                               Margin="14,0,0,4"/>
+
+                                    <!-- Itens do grupo -->
+                                    <ItemsControl ItemsSource="{Binding Sessions}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="8,1,8,1">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <!-- Botão principal da sessão -->
+                                                    <Button Grid.Column="0"
+                                                            Style="{StaticResource SidebarItemButton}"
+                                                            Command="{Binding DataContext.LoadSessionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding Id}">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0"
+                                                                       Text="{Binding Title}"
+                                                                       FontFamily="Consolas" FontSize="11"
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       TextWrapping="NoWrap"/>
+                                                        <!-- Spinner visível apenas quando esta sessão está carregando -->
+                                                        <Ellipse Grid.Column="1"
+                                                                 Width="8" Height="8"
+                                                                 Margin="6,0,0,0"
+                                                                 VerticalAlignment="Center">
+                                                            <Ellipse.Style>
+                                                                <Style TargetType="Ellipse">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Value="True">
+                                                                            <DataTrigger.Binding>
+                                                                                <MultiBinding Converter="{StaticResource GuidEquals}">
+                                                                                    <Binding Path="DataContext.LoadingSessionId" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                                                                    <Binding Path="Id"/>
+                                                                                </MultiBinding>
+                                                                            </DataTrigger.Binding>
+                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Ellipse.Style>
+                                                            <Ellipse.Fill>
+                                                                <SolidColorBrush Color="#E94560"/>
+                                                            </Ellipse.Fill>
+                                                            <Ellipse.RenderTransform>
+                                                                <RotateTransform x:Name="SpinnerRot" CenterX="4" CenterY="4"/>
+                                                            </Ellipse.RenderTransform>
+                                                            <Ellipse.Triggers>
+                                                                <EventTrigger RoutedEvent="Ellipse.Loaded">
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard RepeatBehavior="Forever">
+                                                                            <DoubleAnimation Storyboard.TargetName="SpinnerRot"
+                                                                                             Storyboard.TargetProperty="Angle"
+                                                                                             From="0" To="360"
+                                                                                             Duration="0:0:1"/>
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </EventTrigger>
+                                                            </Ellipse.Triggers>
+                                                        </Ellipse>
+                                                    </Grid>
+                                                </Button>
+
+                                                    <!-- Botão excluir (aparece no hover do Grid pai) -->
+                                                    <Button Grid.Column="1"
+                                                            Content="🗑"
+                                                            FontSize="10"
+                                                            Padding="4,2"
+                                                            VerticalAlignment="Center"
+                                                            Command="{Binding DataContext.DeleteSessionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding Id}"
+                                                            ToolTip="Excluir conversa">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Background" Value="Transparent"/>
+                                                                <Setter Property="BorderThickness" Value="0"/>
+                                                                <Setter Property="Foreground" Value="Transparent"/>
+                                                                <Setter Property="Cursor" Value="Hand"/>
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <Border Background="{TemplateBinding Background}"
+                                                                                    CornerRadius="3"
+                                                                                    Padding="{TemplateBinding Padding}">
+                                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                            </Border>
+                                                                            <ControlTemplate.Triggers>
+                                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                                    <Setter Property="Background" Value="#3A1020"/>
+                                                                                    <Setter Property="Foreground" Value="#E94560"/>
+                                                                                </Trigger>
+                                                                            </ControlTemplate.Triggers>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Grid}}" Value="True">
+                                                                        <Setter Property="Foreground" Value="#A05060"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <!-- Nav inferior -->
+                <StackPanel Grid.Row="3" Margin="0,0,0,8">
+                    <Separator Background="{StaticResource AccentBrush}" Margin="14,4,14,4"/>
+                    <Button Style="{StaticResource SidebarItemButton}"
+                            Command="{Binding NavigateToToolsCommand}"
+                            Margin="8,1,8,1">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔧" FontSize="12" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Tools" FontFamily="Consolas" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource SidebarItemButton}"
+                            Command="{Binding NavigateToSettingsCommand}"
+                            Margin="8,1,8,1">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚙️" FontSize="12" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Settings" FontFamily="Consolas" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource SidebarItemButton}"
+                            Command="{Binding NavigateToLogsCommand}"
+                            Margin="8,1,8,1">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📋" FontSize="12" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Logs" FontFamily="Consolas" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ══ CONTEÚDO PRINCIPAL ════════════════════════════════════════════ -->
+        <Grid Grid.Column="1">
+            <ContentControl Content="{Binding CurrentView}"/>
+
+            <!-- Overlay de loading ao carregar sessão -->
+            <Border Background="#AA0D0D1A"
+                    Visibility="{Binding IsLoadingSession, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <!-- Arco giratório -->
+                    <Grid Width="48" Height="48">
+                        <Ellipse Width="48" Height="48"
+                                 Stroke="#1C2B4A" StrokeThickness="4"/>
+                        <Ellipse Width="48" Height="48"
+                                 Stroke="#E94560" StrokeThickness="4"
+                                 StrokeDashArray="25 75"
+                                 StrokeDashCap="Round"
+                                 RenderTransformOrigin="0.5,0.5">
+                            <Ellipse.RenderTransform>
+                                <RotateTransform x:Name="LoadArc"/>
+                            </Ellipse.RenderTransform>
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Ellipse.Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetName="LoadArc"
+                                                             Storyboard.TargetProperty="Angle"
+                                                             From="0" To="360"
+                                                             Duration="0:0:0.8"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                    </Grid>
+                    <TextBlock Text="Carregando sessão..."
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontFamily="Consolas" FontSize="11"
+                               HorizontalAlignment="Center"
+                               Margin="0,12,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
